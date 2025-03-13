@@ -10,5 +10,8 @@
     "type": "git",
     "url": "https://github.com/fernandoBegegaS/sdi-2425-305-lab-nodejs.git"
   },
-  "private": true
+  "private": true,
+  "dependencies": {
+    "body-parser": "^1.20.3"
+  }
 }
