@@ -25,7 +25,7 @@ module.exports = function (app) {
             name: "Carlos",
             group: "Los Pianistas",
             rol: "pianista"
-        },
+         },
         {
             name: "Carlos",
             group: "Los Pianistas",
