@@ -8,6 +8,14 @@ var logger = require('morgan');
 
 var app = express();
 
+let fileUpload = require('express-fileupload');
+app.use(fileUpload({
+  limits: { fileSize: 50 * 1024 * 1024 },
+  createParentPath: true
+}));
+app.set('uploadPath', __dirname)
+
+
 let bodyParser = require('body-parser');
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -16,6 +24,9 @@ app.use(bodyParser.urlencoded({ extended: true }));
 const { MongoClient } = require("mongodb");
 const connectionStrings = "mongodb+srv://admin:sdi@cluster0.g1is0.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0y";
 const dbClient = new MongoClient(connectionStrings);
+let songsRepository = require("./repositories/songsRepository.js");
+songsRepository.init(app, dbClient);
+require("./routes/songs.js")(app, songsRepository);
 
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
