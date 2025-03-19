@@ -8,12 +8,24 @@ var logger = require('morgan');
 
 var app = express();
 
+let crypto = require('crypto');
+
+let expressSession = require('express-session');
+app.use(expressSession({
+  secret: 'abcdefg',
+  resave: true,
+  saveUninitialized: true
+}));
+
+
 let fileUpload = require('express-fileupload');
 app.use(fileUpload({
   limits: { fileSize: 50 * 1024 * 1024 },
   createParentPath: true
 }));
 app.set('uploadPath', __dirname)
+app.set('clave','abcdefg');
+app.set('crypto',crypto);
 
 
 let bodyParser = require('body-parser');
@@ -24,15 +36,19 @@ app.use(bodyParser.urlencoded({ extended: true }));
 const { MongoClient } = require("mongodb");
 const connectionStrings = "mongodb+srv://admin:sdi@cluster0.g1is0.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0y";
 const dbClient = new MongoClient(connectionStrings);
+
+//songs
 let songsRepository = require("./repositories/songsRepository.js");
 songsRepository.init(app, dbClient);
 require("./routes/songs.js")(app, songsRepository);
 
+//users
+let usersRepository = require("./repositories/usersRepository.js");
+usersRepository.init(app, dbClient);
+require("./routes/users.js")(app, usersRepository);
+
+
 var indexRouter = require('./routes/index');
-var usersRouter = require('./routes/users');
-require("./routes/songs.js")(app,dbClient);
-
-
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'twig');
@@ -44,7 +60,6 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', indexRouter);
-app.use('/users', usersRouter);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
