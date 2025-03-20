@@ -1,4 +1,4 @@
-const {ObjectId} = require("mongodb");
+
 module.exports = function (app, usersRepository) {
   app.get('/users', function (req, res) {
     res.send('lista de usuarios');
