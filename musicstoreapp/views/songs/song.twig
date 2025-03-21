@@ -6,7 +6,7 @@
 	<div class="row">
 		<div class="media col-xs-10">
 			<div class="media-left media-middle">
-				<img class="media-object" src="/covers/{{ song.id }}.png">
+				<img class="media-object" src="/covers/{{ song.id }}.png" alt="Portada de la canción">
 			</div>
 			<div class="media-body">
 				<h2>{{ song.title }}</h2>
@@ -15,9 +15,26 @@
 				<button type="button" class="btn btn-primary pull-right">
 					{{ song.price }} €
 				</button>
-				<!-- Cambiar el precio por "reproducir" si ya está comprada -->
+				<!-- Cambiar el botón por "reproducir" si ya está comprada -->
 			</div>
 		</div>
 	</div>
+
+	{% if comments is not empty %}
+		<div class="row" style="margin-top:20px;">
+			<h3>Comentarios</h3>
+			<ul class="list-group">
+				{% for comment in comments %}
+					<li class="list-group-item">
+						<strong>{{ comment.author }}</strong>: {{ comment.text }}
+					</li>
+				{% endfor %}
+			</ul>
+		</div>
+	{% else %}
+		<div class="row" style="margin-top:20px;">
+			<p>No hay comentarios.</p>
+		</div>
+	{% endif %}
 
 {% endblock %}

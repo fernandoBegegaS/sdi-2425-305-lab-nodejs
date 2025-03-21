@@ -17,6 +17,14 @@ app.use(expressSession({
   saveUninitialized: true
 }));
 
+const userSessionRouter = require('../../sdi-2425-305-lab-nodejs/musicstoreapp/routes/userSessionRouter');
+const userAudiosRouter = require('../../sdi-2425-305-lab-nodejs/musicstoreapp/routes/userAudiosRouter');
+
+app.use("/songs/add",userSessionRouter);
+app.use("/publications",userSessionRouter);
+app.use("/audios/",userAudiosRouter);
+app.use("/shop/",userSessionRouter);
+app.use("/favorites",userSessionRouter);
 
 let fileUpload = require('express-fileupload');
 app.use(fileUpload({
@@ -38,14 +46,26 @@ const connectionStrings = "mongodb+srv://admin:sdi@cluster0.g1is0.mongodb.net/?r
 const dbClient = new MongoClient(connectionStrings);
 
 //songs
+let commentsRepository = require("./repositories/commentsRepository.js");
+commentsRepository.init(app, dbClient);
+
 let songsRepository = require("./repositories/songsRepository.js");
 songsRepository.init(app, dbClient);
-require("./routes/songs.js")(app, songsRepository);
+require("./routes/songs.js")(app, songsRepository,commentsRepository);
+
+
+require("./routes/comments.js")(app, commentsRepository);
+
+let favoriteSongsRepository = require("./repositories/favoriteSongsRepository.js");
+favoriteSongsRepository.init(app, dbClient);
+require("./routes/favorites.js")(app, favoriteSongsRepository);
 
 //users
 let usersRepository = require("./repositories/usersRepository.js");
 usersRepository.init(app, dbClient);
 require("./routes/users.js")(app, usersRepository);
+
+
 
 
 var indexRouter = require('./routes/index');
