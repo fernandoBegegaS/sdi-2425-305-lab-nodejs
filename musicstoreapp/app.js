@@ -25,6 +25,7 @@ app.use("/publications",userSessionRouter);
 app.use("/audios/",userAudiosRouter);
 app.use("/shop/",userSessionRouter);
 app.use("/favorites",userSessionRouter);
+app.use("/songs/comments/add/:song_id",userSessionRouter);
 
 let fileUpload = require('express-fileupload');
 app.use(fileUpload({
