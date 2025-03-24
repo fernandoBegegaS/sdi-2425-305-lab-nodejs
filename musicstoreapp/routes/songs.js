@@ -25,7 +25,6 @@ module.exports = function (app,songsRepository) {
     });
 
 
-
     app.get('/songs/add', function (req, res) {
         res.render("songs/add.twig");
     });
@@ -42,7 +41,7 @@ module.exports = function (app,songsRepository) {
         });
     })
 
-    app.get('/songs/:kind/:id', function(req, res) {
+    app.get('/songs/:kind/:id', function (req, res) {
         let response = 'id: ' + req.params.id + '<br>' + 'Tipo de música: ' + req.params.kind;
         res.send(response);
     });
@@ -67,7 +66,7 @@ module.exports = function (app,songsRepository) {
                                 audio.mv(app.get("uploadPath") + '/public/audios/' + result.songId + '.mp3')
                                     .then(res.send("Agregada la canción ID: " + result.songId))
                                     .catch(error => res.send("Error al subir el audio de la canción"))
-                            }else {
+                            } else {
                                 res.send("Agregada la canción ID: " + result.songId)
                             }
                         })
@@ -84,7 +83,6 @@ module.exports = function (app,songsRepository) {
     });
 
 
-
     app.get('/promo*', function (req, res) {
         res.send('Respuesta al patrón promo*');
     });
@@ -95,15 +93,15 @@ module.exports = function (app,songsRepository) {
 
     app.get('/shop', function (req, res) {
         let filter = {};
-        let options = {sort: { title: 1}};
+        let options = {sort: {title: 1}};
 
-        if(req.query.search != null && typeof(req.query.search) != "undefined" && req.query.search != ""){
+        if (req.query.search != null && typeof (req.query.search) != "undefined" && req.query.search != "") {
             filter = {"title": {$regex: ".*" + req.query.search + ".*"}};
         }
 
         songsRepository.getSongs(filter, options)
             .then(songs => {
-                res.render("shop.twig", { songs: songs });
+                res.render("shop.twig", {songs: songs});
             })
             .catch(error => {
                 res.send("Se ha producido un error al listar las canciones " + error);
@@ -112,7 +110,7 @@ module.exports = function (app,songsRepository) {
 
 
     app.get('/publications', function (req, res) {
-        let filter = {author : req.session.user};
+        let filter = {author: req.session.user};
         let options = {sort: {title: 1}};
         songsRepository.getSongs(filter, options).then(songs => {
             res.render("publication.twig", {songs: songs});
@@ -122,11 +120,11 @@ module.exports = function (app,songsRepository) {
     })
 
     app.get('/songs/edit/:id', function (req, res) {
-        let filter = { _id: new ObjectId(req.params.id) };
+        let filter = {_id: new ObjectId(req.params.id)};
 
         songsRepository.findSong(filter, {})
             .then(song => {
-                res.render('songs/edit.twig', { song: song });
+                res.render('songs/edit.twig', {song: song});
             })
             .catch(error => {
                 res.send("Se ha producido un error al recuperar la canción " + error);
@@ -141,9 +139,9 @@ module.exports = function (app,songsRepository) {
             author: req.session.user
         }
         let songId = req.params.id;
-        let filter = { _id: ObjectId(songId) };
+        let filter = {_id: ObjectId(songId)};
         //que no se cree un documento nuevo, si no existe
-        const options = { upsert: false }
+        const options = {upsert: false}
         songsRepository.updateSong(song, filter, options).then(result => {
             //res.send("Se ha modificado "+ result.modifiedCount + " registro");
             step1UpdateCover(req.files, songId, function (result) {
@@ -158,51 +156,85 @@ module.exports = function (app,songsRepository) {
         });
     })
 
-    function step1UpdateCover(files, songId, callback) {
-        if (files && files.cover != null) {
-            let image = files.cover;
-            image.mv(app.get("uploadPath") + '/public/covers/' + songId + '.png', function (err) {
-                if (err) {
-                    callback(null); // ERROR
-                } else {
-                    step2UpdateAudio(files, songId, callback); // SIGUIENTE
-                }
-            });
-        } else {
-            step2UpdateAudio(files, songId, callback); // SIGUIENTE
-        }
-    }
 
-    function step2UpdateAudio(files, songId, callback) {
-        if (files && files.audio != null) {
-            let audio = files.audio;
-            audio.mv(app.get("uploadPath") + '/public/audios/' + songId + '.mp3', function (err) {
-                if (err) {
-                    callback(null); // ERROR
-                } else {
-                    callback(true); // FIN
-                }
-            });
-        } else {
-            callback(true); // FIN
+    app.post('/songs/buy/:id', function (req, res) {
+        let songId = new ObjectId(req.params.id);
+        let shop = {
+            user: req.session.user,
+            song_id: songId
         }
-    }
-
-    app.get('/songs/delete/:id', function (req, res) {
-        let filter = {_id: new ObjectId(req.params.id)};
-        songsRepository.deleteSong(filter, {}).then(result => {
-            if (result === null || result.deletedCount === 0) {
-                res.send("No se ha podido eliminar el registro");
+        songsRepository.buySong(shop).then(result => {
+            if (result.insertedId === null || typeof (result.insertedId) === undefined) {
+                res.send("Se ha producido un error al comprar la canción")
             } else {
-                res.redirect("/publications");
+                res.redirect("/purchases");
             }
         }).catch(error => {
-            res.send("Se ha producido un error al intentar eliminar la canción: " + error)
+            res.send("Se ha producido un error al comprar la canción " + error)
         })
-    });
+    })
 
 
+    app.get('/purchases', function (req, res) {
+        let filter = {user: req.session.user};
+        let options = {projection: {_id: 0, song_id: 1}};
+        songsRepository.getPurchases(filter, options).then(purchasedIds => {
+            const purchasedSongs = purchasedIds.map(song => song.song_id);
+            let filter = {"_id": {$in: purchasedSongs}};
+            let options = {sort: {title: 1}};
+            songsRepository.getSongs(filter, options).then(songs => {
+                res.render("purchase.twig", {songs: songs});
+            }).catch(error => {
+                res.send("Se ha producido un error al listar las publicaciones del usuario: " + error)
+            });
+        }).catch(error => {
+            res.send("Se ha producido un error al listar las canciones del usuario " + error)
+        })
 
 
+        function step1UpdateCover(files, songId, callback) {
+            if (files && files.cover != null) {
+                let image = files.cover;
+                image.mv(app.get("uploadPath") + '/public/covers/' + songId + '.png', function (err) {
+                    if (err) {
+                        callback(null); // ERROR
+                    } else {
+                        step2UpdateAudio(files, songId, callback); // SIGUIENTE
+                    }
+                });
+            } else {
+                step2UpdateAudio(files, songId, callback); // SIGUIENTE
+            }
+        }
 
+        function step2UpdateAudio(files, songId, callback) {
+            if (files && files.audio != null) {
+                let audio = files.audio;
+                audio.mv(app.get("uploadPath") + '/public/audios/' + songId + '.mp3', function (err) {
+                    if (err) {
+                        callback(null); // ERROR
+                    } else {
+                        callback(true); // FIN
+                    }
+                });
+            } else {
+                callback(true); // FIN
+            }
+        }
+
+        app.get('/songs/delete/:id', function (req, res) {
+            let filter = {_id: new ObjectId(req.params.id)};
+            songsRepository.deleteSong(filter, {}).then(result => {
+                if (result === null || result.deletedCount === 0) {
+                    res.send("No se ha podido eliminar el registro");
+                } else {
+                    res.redirect("/publications");
+                }
+            }).catch(error => {
+                res.send("Se ha producido un error al intentar eliminar la canción: " + error)
+            })
+        });
+
+
+    })
 };
