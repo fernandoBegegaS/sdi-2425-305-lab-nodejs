@@ -1,13 +1,13 @@
 ﻿<!DOCTYPE html>
 <html lang="en">
 <head>
-  <title>title>{% block title %} uoMusic {% endblock %}</</title>
+  <title>{% block title %}uoMusic{% endblock %}</title>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"/>
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.0/jquery.min.js"></script>
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
-  {% block scripts %} {% endblock %}
+  {% block scripts %}{% endblock %}
 </head>
 <body>
 
@@ -18,7 +18,7 @@
       <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#myNavbar">
         <span class="icon-bar"></span>
         <span class="icon-bar"></span>
-        <span class="icon-bar"></span>                        
+        <span class="icon-bar"></span>
       </button>
       <img src="/images/logo.png" alt="logo"/>
     </div>
@@ -27,9 +27,9 @@
         <li id="myshop" class="active"><a href="/shop">Tienda</a></li>
         <li id="mypublication"><a href="/publication">Publicaciones</a></li>
         <li id="mybuy"><a href="/buy">Compras</a></li>
-     </ul>
+      </ul>
       <ul class="nav navbar-nav navbar-right">
-	    <li><a href="/users/signup"><span class="glyphicon glyphicon-user"></span> Registrate</a></li>
+        <li><a href="/users/signup"><span class="glyphicon glyphicon-user"></span> Registrate</a></li>
         <li><a href="/users/login"><span class="glyphicon glyphicon-log-in"></span> Identifícate</a></li>
       </ul>
     </div>
@@ -37,11 +37,32 @@
 </nav>
 
 <div class="container">
-
   {% block main_container %}
-    <!-- Posible contenido por defecto -->
+    <!-- Contenido que se inyecta desde las vistas hijas -->
   {% endblock %}
 </div>
+
+<script>
+  // Manejo de mensajes
+  let params = new URLSearchParams(location.search);
+  let message = params.get("message");
+  let messageType = params.get("messageType");
+
+  if (message !== null && message !== "") {
+    if (messageType === "" || messageType === null) {
+      messageType = 'alert-info';
+    }
+    document.addEventListener('DOMContentLoaded', function() {
+      let container = document.querySelector('.container');
+      if (container) {
+        let alertDiv = document.createElement('div');
+        alertDiv.className = 'alert ' + messageType;
+        alertDiv.textContent = message;
+        container.insertBefore(alertDiv, container.firstChild);
+      }
+    });
+  }
+</script>
 
 </body>
 </html>
