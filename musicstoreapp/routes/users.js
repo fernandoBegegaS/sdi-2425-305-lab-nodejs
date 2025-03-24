@@ -52,7 +52,8 @@ module.exports = function (app, usersRepository) {
           } else {
             req.session.user = user.email;
 
-            res.send("Usuario identificado correctamente: " + user.email);
+            res.redirect("/publications");
+
           }
         })
         .catch(error => {
