@@ -54,7 +54,7 @@ module.exports = function (app, usersRepository) {
 
             res.redirect("/publications");
 
-          }
+           }
         })
         .catch(error => {
           req.session.user = null;
