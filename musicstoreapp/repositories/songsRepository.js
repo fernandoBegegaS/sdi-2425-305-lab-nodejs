@@ -82,6 +82,17 @@ module.exports = {
             throw (error);
         }
     },
+    findPurchase: async function (filter, options) {
+        try {
+            await this.dbClient.connect();
+            const database = this.dbClient.db(this.database);
+            const purchasesCollection = database.collection('purchases');
+            const purchase = await purchasesCollection.findOne(filter, options);
+            return purchase;
+        } catch (error) {
+            throw error;
+        }
+    },
     getSongsPg: async function (filter, options, page) {
         try {
             const limit = 4;
