@@ -324,5 +324,5 @@ function renderError(res, message, error) {
     res.render("error.twig", {
         message: message,
         error: error
-    });
+     });
 }
