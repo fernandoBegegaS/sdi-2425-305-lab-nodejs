@@ -56,6 +56,8 @@ let songsRepository = require("./repositories/songsRepository.js");
 songsRepository.init(app, dbClient);
 require("./routes/songs.js")(app, songsRepository);
 
+require("./routes/api/songsAPIv1.0.js")(app, songsRepository);
+
 //users
 let usersRepository = require("./repositories/usersRepository.js");
 usersRepository.init(app, dbClient);
