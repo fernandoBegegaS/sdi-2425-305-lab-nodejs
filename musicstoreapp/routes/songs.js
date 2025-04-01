@@ -31,15 +31,34 @@ module.exports = function (app,songsRepository) {
 
 
     app.get('/songs/:id', function (req, res) {
-        let filter = {_id: new ObjectId(req.params.id)};
+        let songId = new ObjectId(req.params.id);
+        let user = req.session.user;
+        let filter = { _id: songId };
         let options = {};
-        songsRepository.findSong(filter, options).then(song => {
-            song.id = req.params.id;
-            res.render("songs/song.twig", {song: song});
-        }).catch(error => {
-            res.send("Se ha producido un error al buscar la canción " + error)
-        });
-    })
+
+        songsRepository.findSong(filter, options)
+            .then(song => {
+                let settings = {
+                    url: "https://api.currencyapi.com/v3/latest?apikey=cur_live_MLNibn5supGT9hFA4DPeaOJj4kkrjgavQ6YpNDEx&base_currency=EUR&currencies=USD",
+                    method: "get"
+                };
+                let rest = app.get("rest");
+                rest(settings, function (error, response, body) {
+                    console.log("cod: " + response.statusCode + " Cuerpo: " + body);
+                    let responseObject = JSON.parse(body);
+                    let rateUSD = responseObject.data.USD.value;
+                    let songValue = song.price / rateUSD;
+                    // Agrega el nuevo campo "usd" redondeado a dos decimales
+                    song.usd = Math.round(songValue * 100) / 100;
+                    res.render("songs/song.twig", { song: song});
+                });
+            })
+            .catch(error => {
+                res.send("Se ha producido un error al buscar la canción " + error);
+            });
+    });
+
+
 
     app.get('/songs/:kind/:id', function (req, res) {
         let response = 'id: ' + req.params.id + '<br>' + 'Tipo de música: ' + req.params.kind;
